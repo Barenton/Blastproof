@@ -4,10 +4,11 @@
   "version": "${version}",
   "name": "Blastproof",
   "description": "Prevent block damage caused by explosions.",
-  "authors": [],
+  "authors": [
+    "Barenton"
+  ],
   "contact": {},
   "license": "MIT",
-  "environment": "server",
   "entrypoints": {
     "main": [
       "dev.wundasin.blastproof.Blastproof"
