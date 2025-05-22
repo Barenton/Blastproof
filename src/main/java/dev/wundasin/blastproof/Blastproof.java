@@ -1,24 +1,49 @@
+/**
+ * Main entry point for the Blastproof Fabric mod.
+ * <p>
+ * Handles mod initialization by loading configuration,
+ * registering commands, and logging startup events.
+ */
 package dev.wundasin.blastproof;
 
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Blastproof implements ModInitializer {
-    public static final String MOD_ID = "blastproof";
-    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+public final class Blastproof implements ModInitializer {
+    /**
+     * Unique identifier for the mod.
+     */
+    public static final String MOD_ID = "Blastproof";
 
+    /**
+     * Logger instance for mod-wide logging. Initialized by SLF4J.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+    /**
+     * Called by Fabric on mod initialization.
+     * <p>
+     * Loads configuration, registers commands, and logs startup.
+     */
     @Override
     public void onInitialize() {
+        // Load or create config file
         BlastproofConfig.load();
-        LOGGER.info("Blastproof initialized.");
+
+        // Register mod commands
+        BlastproofCommands.register();
+
+        // Log successful initialization
+        getLogger().info("{} was initialized!", MOD_ID);
     }
 
-    public static Logger logger() {
-        if (LOGGER == null) {
-            throw new IllegalStateException("Logger not yet available");
-        }
-
+    /**
+     * Provides the shared logger instance.
+     *
+     * @return the SLF4J Logger for this mod
+     */
+    public static Logger getLogger() {
         return LOGGER;
     }
 }

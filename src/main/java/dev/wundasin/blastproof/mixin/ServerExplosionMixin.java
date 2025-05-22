@@ -1,7 +1,11 @@
+/**
+ * Mixin into Minecraft's ServerExplosion to conditionally cancel block damage
+ * and fire creation based on the configured explosion source settings.
+ */
 package dev.wundasin.blastproof.mixin;
 
-import com.google.common.collect.ImmutableMap;
 import dev.wundasin.blastproof.BlastproofConfig;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ServerExplosion;
 import org.spongepowered.asm.mixin.Final;
@@ -13,80 +17,86 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.Map;
 
-/**
- * Mixin into ServerExplosion to conditionally cancel block damage
- * and fire creation based on our BlastproofConfig settings.
- */
+import static dev.wundasin.blastproof.BlastproofConfig.SECTION_BLOCK_DAMAGE;
+import static dev.wundasin.blastproof.BlastproofConfig.SECTION_FIRE_CREATION;
+
 @Mixin(ServerExplosion.class)
 public abstract class ServerExplosionMixin {
-    /** The entity that caused the explosion (can be null for block sources). */
-    @Shadow
-    @Final
-    private Entity source;
-
     /**
-     * Immutable map of raw entity names (the "path" after the colon)
-     * → config keys. Defaults to "other" if not present.
+     * The entity that caused this explosion (e.g., TNT entity or creeper).
      */
-    @Unique
-    private static final Map<String, String> TYPE_KEY_MAP = ImmutableMap.<String, String>builder()
-            .put("tnt",             "tnt")
-            .put("end_crystal",     "end_crystal")
-            .put("creeper",         "creeper")
-            .put("bed",             "bed")
-            .put("fireball",        "fireball")
-            .put("respawn_anchor",  "respawn_anchor")
-            .build();
+    @Shadow @Final private Entity source;
 
     /**
-     * Intercept the block‐damage phase. If blockDamage[type] is false, cancel it.
+     * Cached explosion type key for the lifetime of this explosion instance.
+     */
+    @Unique private String explosionTypeCache;
+
+    /**
+     * Hook at the start of block interaction. Cancels block damage if disabled in config.
+     *
+     * @param blocks list of blocks targeted
+     * @param ci callback info allowing cancellation
      */
     @Inject(method = "interactWithBlocks", at = @At("HEAD"), cancellable = true)
     private void onInteractWithBlocks(List<?> blocks, CallbackInfo ci) {
-        String key = determineTypeKey();
-        if (!BlastproofConfig.blockDamage.getOrDefault(key, false)) {
-            ci.cancel();
-        }
+        cancelIfDisabled(SECTION_BLOCK_DAMAGE, ci);
     }
 
     /**
-     * Intercept the fire‐creation phase. If fireCreation[type] is false, cancel it.
+     * Hook at the start of fire creation. Cancels fire spawning if disabled in config.
+     *
+     * @param blocks list of blocks where fire would be created
+     * @param ci callback info allowing cancellation
      */
     @Inject(method = "createFire", at = @At("HEAD"), cancellable = true)
     private void onCreateFire(List<?> blocks, CallbackInfo ci) {
-        String key = determineTypeKey();
-        if (!BlastproofConfig.fireCreation.getOrDefault(key, false)) {
+        cancelIfDisabled(SECTION_FIRE_CREATION, ci);
+    }
+
+    /**
+     * Cancels the injection callback if the given config section is disabled
+     * for the current explosion type.
+     *
+     * @param section the config section key (e.g. disableBlockDamage)
+     * @param ci the injection callback info to cancel
+     */
+    @Unique
+    private void cancelIfDisabled(String section, CallbackInfo ci) {
+        String type = getExplosionType();
+        if (BlastproofConfig.get(section, type, true)) {
             ci.cancel();
         }
     }
 
     /**
-     * Figure out which config key to use for this explosion:
-     * 1. If source==null → “other” (block‐triggered explosion).
-     * 2. Otherwise, take source.getType().toString(), which yields
-     *    "namespace:path" (e.g. "minecraft:tnt").
-     * 3. Split at the colon and grab the path part (e.g. "tnt").
-     * 4. Look up in TYPE_KEY_MAP; default to "other" if missing.
-     * This avoids any direct Registry calls that may not exist in your mappings.
+     * Determines and caches the explosion source type string for config lookup.
+     *
+     * @return a key representing the explosion source (e.g. "tnt", "creeper", or "other")
      */
     @Unique
-    private String determineTypeKey() {
-        // No entity → treat as "other"
-        if (source == null) {
-            return "other";
+    private String getExplosionType() {
+        if (explosionTypeCache != null) {
+            return explosionTypeCache;
         }
 
-        // getType().toString() is typically "namespace:path"
-        String full = source.getType().toString();
-        int colon = full.indexOf(':');
-        // extract the part after ':' if present
-        String name = (colon >= 0 && colon < full.length() - 1)
-                ? full.substring(colon + 1)
-                : full;
+        if (source != null) {
+            var key = BuiltInRegistries.ENTITY_TYPE.getKey(source.getType());
+            String path = key.getPath();
+            // Map registry paths to config keys
+            return explosionTypeCache = switch (path) {
+                case "tnt" -> "tnt";
+                case "creeper" -> "creeper";
+                case "end_crystal" -> "end_crystal";
+                case "small_fireball", "fireball" -> "fireball";
+                case "wither" -> "wither";
+                case "wither_skull" -> "wither_skull";
+                default -> "other";
+            };
+        }
 
-        // map to our config key, or "other" if it's unrecognized
-        return TYPE_KEY_MAP.getOrDefault(name, "other");
+        // Fallback to 'other' if source is null or unrecognized
+        return explosionTypeCache = "other";
     }
 }

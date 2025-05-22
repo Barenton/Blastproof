@@ -1,141 +1,173 @@
+/**
+ * Manages loading, accessing, and persisting the Blastproof mod configuration as JSON.
+ */
 package dev.wundasin.blastproof;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Writer;
-import java.lang.reflect.Type;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-/**
- * Utility class for loading and holding the Blastproof configuration.
- * <p>
- * Responsibilities:
- * <ul>
- *   <li>Ensure config file exists (and create defaults if not).</li>
- *   <li>Load `blockDamage` and `fireCreation` settings into public maps.</li>
- *   <li>Log all actions and any parsing errors.</li>
- * </ul>
- * This class should never be instantiated.
- */
 public final class BlastproofConfig {
-    // --- Constants & shared objects ---;
-    private static final Path CONFIG_PATH = Paths.get("config", "blastproof.json");
-    private static final Gson GSON = new GsonBuilder()
-            .setPrettyPrinting()            // output human‐readable JSON
-            .create();
-    // Type token for deserializing JSON sections into Map<String, Boolean>
-    private static final Type BOOLEAN_MAP_TYPE = new TypeToken<Map<String, Boolean>>() {}.getType();
+    private static final Path CONFIG_DIR = FabricLoader.getInstance().getConfigDir();
+    private static final Path CONFIG_PATH = CONFIG_DIR.resolve("blastproof.json");
 
-    /** Public view of which blocks may cause damage. */
-    public static final Map<String, Boolean> blockDamage = new HashMap<>();
-    /** Public view of which events may create fire. */
-    public static final Map<String, Boolean> fireCreation = new HashMap<>();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    /** Section key for toggling block damage explosion sources */
+    public static final String SECTION_BLOCK_DAMAGE = "disableBlockDamage";
+    /** Section key for toggling fire creation sources */
+    public static final String SECTION_FIRE_CREATION = "disableFireCreation";
+
+    private static final List<String> SECTIONS = List.of(
+            SECTION_BLOCK_DAMAGE,
+            SECTION_FIRE_CREATION
+    );
+
+    private static final Map<String, Map<String, Boolean>> data = new HashMap<>();
 
     // Prevent instantiation
-    private BlastproofConfig() {}
+    private BlastproofConfig() {
+        throw new AssertionError("Utility class");
+    }
 
     /**
-     * Load configuration from disk:
-     * <ol>
-     *   <li>Create parent directories & default file if missing.</li>
-     *   <li>Parse JSON and populate {@link #blockDamage} and {@link #fireCreation}.</li>
-     *   <li>Log each loaded value and any errors encountered.</li>
-     * </ol>
+     * Loads configuration from disk, creating a default file if none exists.
      */
     public static void load() {
         try {
-            ensureConfigFile();  // create default file if it doesn't exist
-            Blastproof.logger().info("Loading Blastproof config...");
+            // Ensure config directory exists
+            Files.createDirectories(CONFIG_DIR);
 
-            // Read and parse the JSON root object
-            JsonObject root = JsonParser.parseReader(
-                    Files.newBufferedReader(CONFIG_PATH)
-            ).getAsJsonObject();
-
-            // Load each section into its respective map
-            loadSection(root, "blockDamage", blockDamage);
-            loadSection(root, "fireCreation", fireCreation);
-
-            Blastproof.logger().info("Blastproof config loaded successfully.");
-        } catch (IOException | JsonParseException e) {
-            Blastproof.logger().error("Failed to load Blastproof config", e);
-        }
-    }
-
-    /**
-     * Ensure the config file exists on disk.
-     * If missing, creates parent dirs and writes default JSON.
-     *
-     * @throws IOException if file operations fail
-     */
-    private static void ensureConfigFile() throws IOException {
-        if (Files.notExists(CONFIG_PATH)) {
-            Blastproof.logger().info("Config file not found, creating...");
-            Files.createDirectories(CONFIG_PATH.getParent());  // create config/ directory
-
-            // Write default config JSON to disk
-            try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
-                GSON.toJson(getDefaultConfig(), writer);
+            // Write default config if missing
+            if (Files.notExists(CONFIG_PATH)) {
+                saveDefault();
             }
+
+            // Read existing config
+            try (Reader reader = Files.newBufferedReader(CONFIG_PATH)) {
+                Map<String, Map<String, Boolean>> loaded =
+                        GSON.fromJson(reader, new TypeToken<Map<String, Map<String, Boolean>>>(){}.getType());
+
+                // Initialize data with defaults then override with any loaded values
+                Map<String, Map<String, Boolean>> defaults = createDefaultData();
+                data.clear();
+                for (String section : SECTIONS) {
+                    Map<String, Boolean> sectionMap = defaults.get(section);
+                    if (loaded != null && loaded.containsKey(section)) {
+                        sectionMap.putAll(loaded.get(section));
+                    }
+                    data.put(section, sectionMap);
+                }
+            }
+
+            Blastproof.getLogger().info("Blastproof config loaded!");
+        } catch (IOException | JsonParseException e) {
+            Blastproof.getLogger().error("Failed to load Blastproof config! Using defaults.", e);
+            // Fallback to defaults in memory
+            data.clear();
+            data.putAll(createDefaultData());
         }
     }
 
     /**
-     * Deserialize one section of the JSON into the given map, then log each entry.
+     * Updates a single config entry and persists to disk.
      *
-     * @param root        the parsed JSON root object
-     * @param sectionName the key for this section in JSON (e.g. "blockDamage")
-     * @param target      the map to populate with (String → Boolean) values
+     * @param section the config section to update
+     * @param key the specific key within the section
+     * @param value the new boolean value
+     * @return true if save succeeded, false otherwise
      */
-    private static void loadSection(JsonObject root, String sectionName, Map<String, Boolean> target) {
-        if (!root.has(sectionName)) {
-            Blastproof.logger().warn("Config missing '{}' section; skipping", sectionName);
-            return;
+    public static boolean updateEntry(String section, String key, boolean value) {
+        if (!data.containsKey(section)) {
+            return false;
         }
-
-        // Deserialize the entire section into a Map<String,Boolean>
-        JsonObject sectionJson = root.getAsJsonObject(sectionName);
-        Map<String, Boolean> sectionMap = GSON.fromJson(sectionJson, BOOLEAN_MAP_TYPE);
-
-        // Clear old values and put all new ones, logging each
-        target.clear();
-        target.putAll(sectionMap);
+        data.get(section).put(key, value);
+        return save();
     }
 
     /**
-     * Build the default configuration JSON object.
-     * <p>
-     * Defaults:
-     * <ul>
-     *   <li>blockDamage: tnt=false, end_crystal=false, respawn_anchor=false, creeper=false, bed=false, fireball=false, other=false</li>
-     *   <li>fireCreation: respawn_anchor=true, other=false</li>
-     * </ul>
+     * Retrieves a config value, returning defaultValue if missing.
      *
-     * @return a JsonObject ready to be written as the default config
+     * @param section the config section to query
+     * @param key the specific key within the section
+     * @param defaultValue fallback if key not present
+     * @return the current or default boolean value
      */
-    private static JsonObject getDefaultConfig() {
-        JsonObject root = new JsonObject();
+    public static boolean get(String section, String key, boolean defaultValue) {
+        return data.getOrDefault(section, Collections.emptyMap())
+                .getOrDefault(key, defaultValue);
+    }
 
-        JsonObject defaultsBlock = new JsonObject();
-        defaultsBlock.addProperty("tnt", false);
-        defaultsBlock.addProperty("end_crystal", false);
-        defaultsBlock.addProperty("respawn_anchor", false);
-        defaultsBlock.addProperty("creeper", false);
-        defaultsBlock.addProperty("bed", false);
-        defaultsBlock.addProperty("fireball", false);
-        defaultsBlock.addProperty("other", false);
+    /**
+     * @param section the section name
+     * @return an unmodifiable set of keys within the section
+     */
+    public static Set<String> getKeysForSection(String section) {
+        return Collections.unmodifiableSet(
+                data.getOrDefault(section, Collections.emptyMap()).keySet()
+        );
+    }
 
-        JsonObject defaultsFire = new JsonObject();
-        defaultsFire.addProperty("respawn_anchor", true);
-        defaultsFire.addProperty("other", false);
+    /**
+     * Creates the default in-memory config structure.
+     *
+     * @return a map of section name → (key → default boolean value)
+     */
+    private static Map<String, Map<String, Boolean>> createDefaultData() {
+        Map<String, Map<String, Boolean>> defaults = new LinkedHashMap<>();
 
-        root.add("blockDamage", defaultsBlock);
-        root.add("fireCreation", defaultsFire);
+        Map<String, Boolean> blockDefaults = new LinkedHashMap<>();
+        blockDefaults.put("tnt", true);
+        blockDefaults.put("creeper", true);
+        blockDefaults.put("end_crystal", true);
+        blockDefaults.put("fireball", true);
+        blockDefaults.put("wither", true);
+        blockDefaults.put("wither_skull", true);
+        blockDefaults.put("other", true);
+        defaults.put(SECTION_BLOCK_DAMAGE, blockDefaults);
 
-        return root;
+        Map<String, Boolean> fireDefaults = new LinkedHashMap<>();
+        fireDefaults.put("other", true);
+        defaults.put(SECTION_FIRE_CREATION, fireDefaults);
+
+        return defaults;
+    }
+
+    /**
+     * Saves the current in-memory config to disk using pretty JSON.
+     *
+     * @return true on success, false on I/O error
+     */
+    private static boolean save() {
+        try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
+            GSON.toJson(data, writer);
+            return true;
+        } catch (IOException e) {
+            Blastproof.getLogger().error("Failed to save Blastproof config!", e);
+            return false;
+        }
+    }
+
+    /**
+     * Writes the default config file to disk without loading.
+     */
+    private static void saveDefault() throws IOException {
+        try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
+            GSON.toJson(createDefaultData(), writer);
+        }
     }
 }
