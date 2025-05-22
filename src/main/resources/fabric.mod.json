@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "blastproof",
+  "version": "${version}",
+  "name": "Blastproof",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/blastproof/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "dev.wundasin.blastproof.Blastproof"
+    ]
+  },
+  "mixins": [
+    "blastproof.mixins.json",
+    {
+      "config": "blastproof.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
