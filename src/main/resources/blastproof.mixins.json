@@ -4,6 +4,7 @@
   "package": "dev.wundasin.blastproof.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ServerExplosionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

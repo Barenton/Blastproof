@@ -3,11 +3,10 @@
   "id": "blastproof",
   "version": "${version}",
   "name": "Blastproof",
-  "description": "",
+  "description": "Prevent block damage caused by explosions.",
   "authors": [],
   "contact": {},
   "license": "MIT",
-  "icon": "assets/blastproof/icon.png",
   "environment": "server",
   "entrypoints": {
     "main": [
