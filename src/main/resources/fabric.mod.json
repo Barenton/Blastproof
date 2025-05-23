@@ -11,15 +11,11 @@
   "license": "MIT",
   "entrypoints": {
     "main": [
-      "dev.wundasin.blastproof.Blastproof"
+      "dev.barenton.blastproof.Blastproof"
     ]
   },
   "mixins": [
-    "blastproof.mixins.json",
-    {
-      "config": "blastproof.client.mixins.json",
-      "environment": "client"
-    }
+    "blastproof.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",

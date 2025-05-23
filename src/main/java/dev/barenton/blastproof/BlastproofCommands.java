@@ -4,7 +4,7 @@
  * This class defines subcommands for toggling block damage and fire creation settings,
  * providing both getter and setter functionality with tab-completion for valid keys.
  */
-package dev.wundasin.blastproof;
+package dev.barenton.blastproof;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;

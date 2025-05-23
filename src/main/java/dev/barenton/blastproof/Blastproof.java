@@ -4,7 +4,7 @@
  * Handles mod initialization by loading configuration,
  * registering commands, and logging startup events.
  */
-package dev.wundasin.blastproof;
+package dev.barenton.blastproof;
 
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;

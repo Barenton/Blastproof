@@ -1,7 +1,7 @@
 /**
  * Manages loading, accessing, and persisting the Blastproof mod configuration as JSON.
  */
-package dev.wundasin.blastproof;
+package dev.barenton.blastproof;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

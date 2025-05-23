@@ -2,9 +2,9 @@
  * Mixin into Minecraft's ServerExplosion to conditionally cancel block damage
  * and fire creation based on the configured explosion source settings.
  */
-package dev.wundasin.blastproof.mixin;
+package dev.barenton.blastproof.mixin;
 
-import dev.wundasin.blastproof.BlastproofConfig;
+import dev.barenton.blastproof.BlastproofConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ServerExplosion;
@@ -18,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-import static dev.wundasin.blastproof.BlastproofConfig.SECTION_BLOCK_DAMAGE;
-import static dev.wundasin.blastproof.BlastproofConfig.SECTION_FIRE_CREATION;
+import static dev.barenton.blastproof.BlastproofConfig.SECTION_BLOCK_DAMAGE;
+import static dev.barenton.blastproof.BlastproofConfig.SECTION_FIRE_CREATION;
 
 @Mixin(ServerExplosion.class)
 public abstract class ServerExplosionMixin {
