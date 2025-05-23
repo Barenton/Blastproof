@@ -53,7 +53,7 @@ After your first launch, edit `config/blastproof.json` to adjust settings:
 {
   "disableBlockDamage": {
     "tnt": true,
-    "creeper": false,
+    "creeper": true,
     "end_crystal": true,
     "fireball": true,
     "wither": true,
