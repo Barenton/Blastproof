@@ -1,38 +1,55 @@
 # Blastproof
 
-**Version:** 0.1.0
-**Minecraft:** 1.21.5+
+**Easily prevent explosions from damaging blocks or starting fires in your Fabric server or single-player world.**
 
-A lightweight Fabric mod that **prevents explosions from damaging blocks** (and optionally creating fire) in your server or single-player world.
-
----
-
-## Features
-
-* **Block Damage Prevention**
-  Stops all explosion sources (TNT, End Crystals, Respawn Anchors, Creepers, Beds, Fireballs, etc.) from breaking blocks.
-
-* **Fire Creation Prevention** *(limited)*
-  Set whether you want fire creation after certain explosions (eg. Respawn Anchor). Defaults to no fire creation.
-  Currently no individual explosion support. Either fire is created or it isn't!
-
-* **Easy JSON Config**
-  A `config/blastproof.json` file allows you to configure behavior.
+Blastproof ensures explosions from TNT, creepers, end crystals, and other sources won't damage your hard work. Whether you're building cities or simply protecting your creations, Blastproof helps maintain the integrity of your world.
 
 ---
 
-## Installation
+## 💡 Why I Created Blastproof
 
-* Download the latest `.jar` and place it in your
-   `mods/` folder.
+> I developed Blastproof because I wanted to run a modded Fabric server but couldn't find an up-to-date mod to disable block damage from blocks not covered through vanilla gamerules (beds, respawn anchors, etc.), which can potentially ruin builds in the overworld. I also wanted to have TNT enabled (normally disabled with the `tntExplodes` gamerule set to `false`), but didn't want to break anything! Blastproof addresses this gap, providing easy control over explosion damage and fire creation. This mod is ideal for players who want to preserve all features that `mobGriefing false` disables (such as endermen picking up blocks), but still prevent explosions from damaging builds.
+
+
+## 🚀 Features
+
+* **Compatibility with Gamerules:** Gamerules such as `mobGriefing` won't conflict with Blastproof but rather serve as an additional layer of protection.
+* **Entity Damage Preservation:** Entities still receive damage from explosions; only blocks are protected to prevent griefing.
+* **Block Damage Control:** Disable block damage from TNT, Creepers, End Crystals, Wither Skulls, Fireballs, Withers, and custom "other" sources.
+* **Fire Prevention:** Stop explosions from causing wildfires.
+* **Auto-Generated Configuration:** A user-friendly config file is created on the first run at `config/blastproof.json` with _blastproofed_ default settings.
+* **In-Game Commands:** Use `/blastproof` to easily:
+
+  * **Check settings:**
+
+    ```mc
+    /blastproof disableBlockDamage tnt
+    ```
+  * **Toggle options:**
+
+    ```mc
+    /blastproof disableBlockDamage tnt false
+    ```
+* **Universal Compatibility:** Works seamlessly on both dedicated servers and integrated single-player worlds.
+* **Lightweight:** Only about 12 KB with no additional dependencies.
+
+
+## ⚠️ Current Limitations
+
+Currently, certain explosion sources, such as respawn anchors and beds, cannot be individually configured but can still be controlled collectively using the "other" flag in the configuration file.
+
+
+## 📝 Disclaimer
+
+This is my first Minecraft mod, Java project, and GitHub repository. As such, certain aspects of the repository and files might not be perfect, and I'm open to suggestions and improvements!
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
-The mod will generate `config/blastproof.json` with defaults:
+After your first launch, edit `config/blastproof.json` to adjust settings:
 
-```json
+```jsonc
 {
   "disableBlockDamage": {
     "tnt": true,
@@ -48,10 +65,3 @@ The mod will generate `config/blastproof.json` with defaults:
   }
 }
 ```
-
----
-
-## License
-
-[MIT](LICENSE)
-© 2025 Barenton
