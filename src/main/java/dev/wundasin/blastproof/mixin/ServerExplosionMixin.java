@@ -26,18 +26,21 @@ public abstract class ServerExplosionMixin {
     /**
      * The entity that caused this explosion (e.g., TNT entity or creeper).
      */
-    @Shadow @Final private Entity source;
+    @Shadow
+    @Final
+    private Entity source;
 
     /**
      * Cached explosion type key for the lifetime of this explosion instance.
      */
-    @Unique private String explosionTypeCache;
+    @Unique
+    private String explosionTypeCache;
 
     /**
      * Hook at the start of block interaction. Cancels block damage if disabled in config.
      *
      * @param blocks list of blocks targeted
-     * @param ci callback info allowing cancellation
+     * @param ci     callback info allowing cancellation
      */
     @Inject(method = "interactWithBlocks", at = @At("HEAD"), cancellable = true)
     private void onInteractWithBlocks(List<?> blocks, CallbackInfo ci) {
@@ -48,7 +51,7 @@ public abstract class ServerExplosionMixin {
      * Hook at the start of fire creation. Cancels fire spawning if disabled in config.
      *
      * @param blocks list of blocks where fire would be created
-     * @param ci callback info allowing cancellation
+     * @param ci     callback info allowing cancellation
      */
     @Inject(method = "createFire", at = @At("HEAD"), cancellable = true)
     private void onCreateFire(List<?> blocks, CallbackInfo ci) {
@@ -60,7 +63,7 @@ public abstract class ServerExplosionMixin {
      * for the current explosion type.
      *
      * @param section the config section key (e.g. disableBlockDamage)
-     * @param ci the injection callback info to cancel
+     * @param ci      the injection callback info to cancel
      */
     @Unique
     private void cancelIfDisabled(String section, CallbackInfo ci) {

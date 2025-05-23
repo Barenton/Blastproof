@@ -22,7 +22,8 @@ public final class BlastproofCommands {
     private static final String LOG_PREFIX = "[Blastproof]";
 
     // Prevent instantiation
-    private BlastproofCommands() {}
+    private BlastproofCommands() {
+    }
 
     /**
      * Registers all Blastproof-related commands on mod initialization.
@@ -38,15 +39,16 @@ public final class BlastproofCommands {
     /**
      * Builds and registers a subsection command under `/blastproof`.
      *
-     * @param dispatcher   The brigadier command dispatcher
-     * @param sectionKey   The config section identifier (e.g., block damage settings)
-     * @param commandName  The literal name of the subcommand (e.g., "disableBlockDamage")
+     * @param dispatcher  The brigadier command dispatcher
+     * @param sectionKey  The config section identifier (e.g., block damage settings)
+     * @param commandName The literal name of the subcommand (e.g., "disableBlockDamage")
      */
     private static void registerConfigCommand(CommandDispatcher<CommandSourceStack> dispatcher,
                                               String sectionKey,
                                               String commandName) {
         dispatcher.register(
                 Commands.literal("blastproof")
+                        .requires(commandSourceStack -> commandSourceStack.hasPermission(2))
                         .then(Commands.literal(commandName)
                                 .then(Commands.argument("key", StringArgumentType.word())
                                         // Provide valid key suggestions based on config
@@ -67,10 +69,10 @@ public final class BlastproofCommands {
     /**
      * Handles setting a configuration entry and notifies the command source.
      *
-     * @param ctx          The command context
-     * @param section      The config section to modify
-     * @param commandName  Display name used in feedback messages
-     * @return             1 on success, 0 on failure
+     * @param ctx         The command context
+     * @param section     The config section to modify
+     * @param commandName Display name used in feedback messages
+     * @return 1 on success, 0 on failure
      */
     private static int handleSet(CommandContext<CommandSourceStack> ctx,
                                  String section,
@@ -98,10 +100,10 @@ public final class BlastproofCommands {
     /**
      * Handles retrieving a configuration entry and sends the current value to the command source.
      *
-     * @param ctx          The command context
-     * @param section      The config section to query
-     * @param commandName  Display name used in feedback messages
-     * @return             Always returns 1
+     * @param ctx         The command context
+     * @param section     The config section to query
+     * @param commandName Display name used in feedback messages
+     * @return Always returns 1
      */
     private static int handleGet(CommandContext<CommandSourceStack> ctx,
                                  String section,
@@ -121,8 +123,8 @@ public final class BlastproofCommands {
     /**
      * Creates a SuggestionProvider for valid config keys in a given section.
      *
-     * @param section  The config section identifier
-     * @return         A SuggestionProvider that suggests each key from the config
+     * @param section The config section identifier
+     * @return A SuggestionProvider that suggests each key from the config
      */
     private static SuggestionProvider<CommandSourceStack> createSuggestionProvider(String section) {
         return (ctx, builder) -> {

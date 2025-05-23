@@ -27,9 +27,13 @@ public final class BlastproofConfig {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    /** Section key for toggling block damage explosion sources */
+    /**
+     * Section key for toggling block damage explosion sources
+     */
     public static final String SECTION_BLOCK_DAMAGE = "disableBlockDamage";
-    /** Section key for toggling fire creation sources */
+    /**
+     * Section key for toggling fire creation sources
+     */
     public static final String SECTION_FIRE_CREATION = "disableFireCreation";
 
     private static final List<String> SECTIONS = List.of(
@@ -60,7 +64,8 @@ public final class BlastproofConfig {
             // Read existing config
             try (Reader reader = Files.newBufferedReader(CONFIG_PATH)) {
                 Map<String, Map<String, Boolean>> loaded =
-                        GSON.fromJson(reader, new TypeToken<Map<String, Map<String, Boolean>>>(){}.getType());
+                        GSON.fromJson(reader, new TypeToken<Map<String, Map<String, Boolean>>>() {
+                        }.getType());
 
                 // Initialize data with defaults then override with any loaded values
                 Map<String, Map<String, Boolean>> defaults = createDefaultData();
@@ -87,8 +92,8 @@ public final class BlastproofConfig {
      * Updates a single config entry and persists to disk.
      *
      * @param section the config section to update
-     * @param key the specific key within the section
-     * @param value the new boolean value
+     * @param key     the specific key within the section
+     * @param value   the new boolean value
      * @return true if save succeeded, false otherwise
      */
     public static boolean updateEntry(String section, String key, boolean value) {
@@ -102,8 +107,8 @@ public final class BlastproofConfig {
     /**
      * Retrieves a config value, returning defaultValue if missing.
      *
-     * @param section the config section to query
-     * @param key the specific key within the section
+     * @param section      the config section to query
+     * @param key          the specific key within the section
      * @param defaultValue fallback if key not present
      * @return the current or default boolean value
      */
