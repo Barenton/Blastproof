@@ -47,7 +47,8 @@ This is my first Minecraft mod, Java project, and GitHub repository. As such, ce
 
 ## ⚙️ Configuration
 
-After your first launch, edit `config/blastproof.json` to adjust settings:
+After your first launch, edit `config/blastproof.json` to adjust settings.
+Note: The `other` flag will override the `respawn_anchor` and `bed` flags!
 
 ```jsonc
 {
