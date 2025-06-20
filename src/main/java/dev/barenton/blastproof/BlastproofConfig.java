@@ -127,6 +127,9 @@ public final class BlastproofConfig {
         );
     }
 
+    public static final String RESPAWN_ANCHOR_KEY = "respawn_anchor";
+    public static final String BED_KEY = "bed";
+
     /**
      * Creates the default in-memory config structure.
      *
@@ -142,10 +145,14 @@ public final class BlastproofConfig {
         blockDefaults.put("fireball", true);
         blockDefaults.put("wither", true);
         blockDefaults.put("wither_skull", true);
+        blockDefaults.put(RESPAWN_ANCHOR_KEY, true);
+        blockDefaults.put(BED_KEY, true);
         blockDefaults.put("other", true);
         defaults.put(SECTION_BLOCK_DAMAGE, blockDefaults);
 
         Map<String, Boolean> fireDefaults = new LinkedHashMap<>();
+        fireDefaults.put(RESPAWN_ANCHOR_KEY, true);
+        fireDefaults.put(BED_KEY, true);
         fireDefaults.put("other", true);
         defaults.put(SECTION_FIRE_CREATION, fireDefaults);
 
