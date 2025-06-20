@@ -58,9 +58,13 @@ After your first launch, edit `config/blastproof.json` to adjust settings:
     "fireball": true,
     "wither": true,
     "wither_skull": true,
+    "respawn_anchor": true,
+    "bed": true,
     "other": true
   },
   "disableFireCreation": {
+    "respawn_anchor": true,
+    "bed": true,
     "other": true
   }
 }
