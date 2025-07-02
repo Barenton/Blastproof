@@ -34,9 +34,6 @@ Blastproof ensures explosions from TNT, creepers, end crystals, and other source
 * **Lightweight:** Only about 12 KB with no additional dependencies (besides Fabric API).
 
 
-## ⚠️ Current Limitations
-
-Currently, certain explosion sources, such as respawn anchors and beds, cannot be individually configured but can still be controlled collectively using the "other" flag in the configuration file.
 
 
 ## 📝 Disclaimer
