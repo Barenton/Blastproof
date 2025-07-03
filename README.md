@@ -31,7 +31,7 @@ Blastproof ensures explosions from TNT, creepers, end crystals, and other source
     /blastproof disableBlockDamage tnt false
     ```
 * **Universal Compatibility:** Works seamlessly on both dedicated servers and integrated single-player worlds.
-* **Lightweight:** Only about 12 KB with no additional dependencies (besides Fabric API).
+* **Lightweight:** Less than 20 KB with no additional dependencies (besides Fabric API).
 
 
 
