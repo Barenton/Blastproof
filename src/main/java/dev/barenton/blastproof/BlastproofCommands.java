@@ -15,11 +15,13 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.PermissionCheck;
 
 import java.util.Set;
 
 public final class BlastproofCommands {
     private static final String LOG_PREFIX = "[Blastproof]";
+    private static final PermissionCheck BLASTPROOF_PERMISSION = Commands.LEVEL_GAMEMASTERS;
 
     // Prevent instantiation
     private BlastproofCommands() {
@@ -48,16 +50,11 @@ public final class BlastproofCommands {
                                               String commandName) {
         dispatcher.register(
                 Commands.literal("blastproof")
-                        .requires(commandSourceStack -> commandSourceStack.hasPermission(2))
+                        .requires(Commands.hasPermission(BLASTPROOF_PERMISSION))
                         .then(Commands.literal(commandName)
                                 .then(Commands.argument("key", StringArgumentType.word())
-                                        // Provide valid key suggestions based on config
                                         .suggests(createSuggestionProvider(sectionKey))
-
-                                        // GETTER: /blastproof <commandName> <key>
                                         .executes(ctx -> handleGet(ctx, sectionKey, commandName))
-
-                                        // SETTER: /blastproof <commandName> <key> <true|false>
                                         .then(Commands.argument("value", BoolArgumentType.bool())
                                                 .executes(ctx -> handleSet(ctx, sectionKey, commandName))
                                         )

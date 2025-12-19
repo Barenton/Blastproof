@@ -1,10 +1,10 @@
 package dev.barenton.blastproof.mixin;
 
 import dev.barenton.blastproof.BlastproofConfig;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.ExplosionDamageCalculator;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.RespawnAnchorBlock;
 import net.minecraft.world.phys.Vec3;
@@ -15,17 +15,17 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(RespawnAnchorBlock.class)
 public abstract class RespawnAnchorBlockMixin {
     /**
-     * In RespawnAnchorBlock#explode(BlockState, Level, BlockPos),
+     * In RespawnAnchorBlock#explode(BlockState, ServerLevel, BlockPos),
      * redirect the single call to Level.explode(...) so that
-     * block‐breaking is disabled by swapping ExplosionInteraction.BLOCK → NONE.
+     * block-breaking is disabled by swapping ExplosionInteraction.BLOCK -> NONE.
      */
     @Redirect(
             method = "explode(Lnet/minecraft/world/level/block/state/BlockState;"
-                    + "Lnet/minecraft/world/level/Level;"
+                    + "Lnet/minecraft/server/level/ServerLevel;"
                     + "Lnet/minecraft/core/BlockPos;)V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/Level;"
+                    target = "Lnet/minecraft/server/level/ServerLevel;"
                             + "explode(Lnet/minecraft/world/entity/Entity;"
                             + "Lnet/minecraft/world/damagesource/DamageSource;"
                             + "Lnet/minecraft/world/level/ExplosionDamageCalculator;"
@@ -34,7 +34,7 @@ public abstract class RespawnAnchorBlockMixin {
             )
     )
     private void redirectAnchorExplosion(
-            Level world,
+            ServerLevel world,
             Entity source,
             DamageSource damageSource,
             ExplosionDamageCalculator calculator,
