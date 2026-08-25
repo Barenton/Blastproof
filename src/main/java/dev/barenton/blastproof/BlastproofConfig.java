@@ -35,10 +35,15 @@ public final class BlastproofConfig {
      * Section key for toggling fire creation sources
      */
     public static final String SECTION_FIRE_CREATION = "disableFireCreation";
+    /**
+     * Section key for making mobs ignore configured explosion sources.
+     */
+    public static final String SECTION_MOB_DAMAGE = "disableMobDamage";
 
     private static final List<String> SECTIONS = List.of(
             SECTION_BLOCK_DAMAGE,
-            SECTION_FIRE_CREATION
+            SECTION_FIRE_CREATION,
+            SECTION_MOB_DAMAGE
     );
 
     private static final Map<String, Map<String, Boolean>> data = new HashMap<>();
@@ -97,7 +102,7 @@ public final class BlastproofConfig {
      * @return true if save succeeded, false otherwise
      */
     public static boolean updateEntry(String section, String key, boolean value) {
-        if (!data.containsKey(section)) {
+        if (!data.containsKey(section) || !data.get(section).containsKey(key)) {
             return false;
         }
         data.get(section).put(key, value);
@@ -127,9 +132,6 @@ public final class BlastproofConfig {
         );
     }
 
-    public static final String RESPAWN_ANCHOR_KEY = "respawn_anchor";
-    public static final String BED_KEY = "bed";
-
     /**
      * Creates the default in-memory config structure.
      *
@@ -138,24 +140,18 @@ public final class BlastproofConfig {
     private static Map<String, Map<String, Boolean>> createDefaultData() {
         Map<String, Map<String, Boolean>> defaults = new LinkedHashMap<>();
 
-        Map<String, Boolean> blockDefaults = new LinkedHashMap<>();
-        blockDefaults.put("tnt", true);
-        blockDefaults.put("creeper", true);
-        blockDefaults.put("end_crystal", true);
-        blockDefaults.put("fireball", true);
-        blockDefaults.put("wither", true);
-        blockDefaults.put("wither_skull", true);
-        blockDefaults.put(RESPAWN_ANCHOR_KEY, true);
-        blockDefaults.put(BED_KEY, true);
-        blockDefaults.put("other", true);
-        defaults.put(SECTION_BLOCK_DAMAGE, blockDefaults);
+        defaults.put(SECTION_BLOCK_DAMAGE, createSourceDefaults(true));
+        defaults.put(SECTION_FIRE_CREATION, createSourceDefaults(true));
+        defaults.put(SECTION_MOB_DAMAGE, createSourceDefaults(false));
 
-        Map<String, Boolean> fireDefaults = new LinkedHashMap<>();
-        fireDefaults.put(RESPAWN_ANCHOR_KEY, true);
-        fireDefaults.put(BED_KEY, true);
-        fireDefaults.put("other", true);
-        defaults.put(SECTION_FIRE_CREATION, fireDefaults);
+        return defaults;
+    }
 
+    private static Map<String, Boolean> createSourceDefaults(boolean defaultValue) {
+        Map<String, Boolean> defaults = new LinkedHashMap<>();
+        for (BlastproofExplosionType type : BlastproofExplosionType.values()) {
+            defaults.put(type.configKey(), defaultValue);
+        }
         return defaults;
     }
 
