@@ -1,12 +1,14 @@
 /**
- * Mixin into Minecraft's ServerExplosion to conditionally cancel block damage
- * and fire creation based on the configured explosion source settings.
+ * Applies Blastproof's block, fire, and mob settings to server explosions.
  */
 package dev.barenton.blastproof.mixin;
 
 import dev.barenton.blastproof.BlastproofConfig;
-import net.minecraft.core.registries.BuiltInRegistries;
+import dev.barenton.blastproof.BlastproofExplosionType;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.ServerExplosion;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,12 +16,14 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
 import static dev.barenton.blastproof.BlastproofConfig.SECTION_BLOCK_DAMAGE;
 import static dev.barenton.blastproof.BlastproofConfig.SECTION_FIRE_CREATION;
+import static dev.barenton.blastproof.BlastproofConfig.SECTION_MOB_DAMAGE;
 
 @Mixin(ServerExplosion.class)
 public abstract class ServerExplosionMixin {
@@ -31,10 +35,34 @@ public abstract class ServerExplosionMixin {
     private Entity source;
 
     /**
+     * Calculator supplied for this explosion, including explicit bed/anchor type metadata.
+     */
+    @Shadow
+    @Final
+    private ExplosionDamageCalculator damageCalculator;
+
+    /**
      * Cached explosion type key for the lifetime of this explosion instance.
      */
     @Unique
-    private String explosionTypeCache;
+    private BlastproofExplosionType explosionTypeCache;
+
+    /**
+     * Makes configured mobs follow Minecraft's complete explosion-ignore path.
+     */
+    @Redirect(
+            method = "hurtEntities",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/entity/Entity;ignoreExplosion"
+                            + "(Lnet/minecraft/world/level/Explosion;)Z"
+            )
+    )
+    private boolean ignoreExplosionForConfiguredMob(Entity entity, Explosion explosion) {
+        return entity.ignoreExplosion(explosion)
+                || (entity instanceof Mob
+                && BlastproofConfig.get(SECTION_MOB_DAMAGE, getExplosionType().configKey(), false));
+    }
 
     /**
      * Hook at the start of block interaction. Cancels block damage if disabled in config.
@@ -67,39 +95,21 @@ public abstract class ServerExplosionMixin {
      */
     @Unique
     private void cancelIfDisabled(String section, CallbackInfo ci) {
-        String type = getExplosionType();
-        if (BlastproofConfig.get(section, type, true)) {
+        if (BlastproofConfig.get(section, getExplosionType().configKey(), true)) {
             ci.cancel();
         }
     }
 
     /**
-     * Determines and caches the explosion source type string for config lookup.
+     * Determines and caches the explosion source type for config lookup.
      *
-     * @return a key representing the explosion source (e.g. "tnt", "creeper", or "other")
+     * @return the canonical source type for this explosion
      */
     @Unique
-    private String getExplosionType() {
+    private BlastproofExplosionType getExplosionType() {
         if (explosionTypeCache != null) {
             return explosionTypeCache;
         }
-
-        if (source != null) {
-            var key = BuiltInRegistries.ENTITY_TYPE.getKey(source.getType());
-            String path = key.getPath();
-            // Map registry paths to config keys
-            return explosionTypeCache = switch (path) {
-                case "tnt" -> "tnt";
-                case "creeper" -> "creeper";
-                case "end_crystal" -> "end_crystal";
-                case "small_fireball", "fireball" -> "fireball";
-                case "wither" -> "wither";
-                case "wither_skull" -> "wither_skull";
-                default -> "other";
-            };
-        }
-
-        // Fallback to 'other' if source is null or unrecognized
-        return explosionTypeCache = "other";
+        return explosionTypeCache = BlastproofExplosionType.resolve(damageCalculator, source);
     }
 }
