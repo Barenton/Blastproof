@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "blastproof-gametest",
+  "version": "1.0.0",
+  "name": "Blastproof Game Tests",
+  "environment": "server",
+  "entrypoints": {
+    "fabric-gametest": [
+      "dev.barenton.blastproof.BlastproofGameTest"
+    ]
+  },
+  "depends": {
+    "blastproof": "*",
+    "fabric-api": "*",
+    "fabricloader": "*",
+    "minecraft": "26.2"
+  }
+}
