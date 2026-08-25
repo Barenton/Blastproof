@@ -1,10 +1,11 @@
 package dev.barenton.blastproof.mixin;
 
-import dev.barenton.blastproof.BlastproofConfig;
+import dev.barenton.blastproof.BlastproofExplosionType;
+import dev.barenton.blastproof.TypedExplosionDamageCalculator;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.ExplosionDamageCalculator;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.RespawnAnchorBlock;
 import net.minecraft.world.phys.Vec3;
@@ -15,9 +16,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(RespawnAnchorBlock.class)
 public abstract class RespawnAnchorBlockMixin {
     /**
-     * In RespawnAnchorBlock#explode(BlockState, Level, BlockPos),
-     * redirect the single call to Level.explode(...) so that
-     * block‐breaking is disabled by swapping ExplosionInteraction.BLOCK → NONE.
+     * Marks the anchor explosion explicitly while preserving its custom
+     * water-aware damage calculator.
      */
     @Redirect(
             method = "explode(Lnet/minecraft/world/level/block/state/BlockState;"
@@ -43,24 +43,14 @@ public abstract class RespawnAnchorBlockMixin {
             boolean fire,
             ExplosionInteraction interaction
     ) {
-        boolean disableAnchor = BlastproofConfig.get(
-                BlastproofConfig.SECTION_BLOCK_DAMAGE,
-                BlastproofConfig.RESPAWN_ANCHOR_KEY,
-                false
-        );
-
-        ExplosionInteraction actualInteraction = disableAnchor
-                ? ExplosionInteraction.NONE
-                : interaction;
-
         world.explode(
                 source,
                 damageSource,
-                calculator,
+                TypedExplosionDamageCalculator.wrap(calculator, BlastproofExplosionType.RESPAWN_ANCHOR),
                 pos,
                 radius,
                 fire,
-                actualInteraction
+                interaction
         );
     }
 }

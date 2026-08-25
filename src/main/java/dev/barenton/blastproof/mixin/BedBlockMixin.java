@@ -1,6 +1,7 @@
 package dev.barenton.blastproof.mixin;
 
-import dev.barenton.blastproof.BlastproofConfig;
+import dev.barenton.blastproof.BlastproofExplosionType;
+import dev.barenton.blastproof.TypedExplosionDamageCalculator;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.ExplosionDamageCalculator;
@@ -41,24 +42,14 @@ public abstract class BedBlockMixin {
             boolean fire,
             ExplosionInteraction interaction
     ) {
-        boolean disableAnchor = BlastproofConfig.get(
-                BlastproofConfig.SECTION_BLOCK_DAMAGE,
-                BlastproofConfig.BED_KEY,
-                false
-        );
-
-        ExplosionInteraction actualInteraction = disableAnchor
-                ? ExplosionInteraction.NONE
-                : interaction;
-
         world.explode(
                 source,
                 damageSource,
-                calculator,
+                TypedExplosionDamageCalculator.wrap(calculator, BlastproofExplosionType.BED),
                 pos,
                 radius,
                 fire,
-                actualInteraction
+                interaction
         );
     }
 }

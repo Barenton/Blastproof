@@ -3,7 +3,7 @@
   "id": "blastproof",
   "version": "${version}",
   "name": "Blastproof",
-  "description": "Prevent block damage caused by explosions.",
+  "description": "Control block damage, fire creation, and mob effects caused by explosions.",
   "authors": [
     "Barenton"
   ],
