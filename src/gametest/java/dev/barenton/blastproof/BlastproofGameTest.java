@@ -1,9 +1,9 @@
 package dev.barenton.blastproof;
 
-import net.fabricmc.fabric.api.gametest.v1.CustomTestMethodInvoker;
-import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,7 +11,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.PrimedTnt;
-import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
@@ -27,8 +27,8 @@ import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public final class BlastproofGameTest implements CustomTestMethodInvoker {
-    @GameTest
+public final class BlastproofGameTest implements FabricGameTest {
+    @GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
     public void configuredExplosionEffects(GameTestHelper helper) {
         Map<String, Boolean> originalMobSettings = captureMobSettings();
 
@@ -240,8 +240,12 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
     }
 
     @Override
-    public void invokeTestMethod(GameTestHelper helper, Method method) throws ReflectiveOperationException {
+    public void invokeTestMethod(GameTestHelper helper, Method method) {
         helper.setBlock(0, 0, 0, Blocks.AIR);
-        method.invoke(this, helper);
+        try {
+            method.invoke(this, helper);
+        } catch (ReflectiveOperationException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 }
