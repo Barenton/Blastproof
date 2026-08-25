@@ -1,6 +1,6 @@
 # Blastproof
 
-**Easily prevent explosions from damaging blocks or starting fires in your Fabric server or single-player world.**
+**Control whether explosions damage blocks, start fires, or affect mobs in your Fabric server or single-player world.**
 
 Blastproof ensures explosions from TNT, creepers, end crystals, and other sources won't damage your hard work. Whether you're building cities or simply protecting your creations, Blastproof helps maintain the integrity of your world.
 
@@ -14,7 +14,7 @@ Blastproof ensures explosions from TNT, creepers, end crystals, and other source
 ## 🚀 Features
 
 * **Compatibility with Gamerules:** Gamerules such as `mobGriefing` won't conflict with Blastproof but rather serve as an additional layer of protection.
-* **Entity Damage Preservation:** Entities still receive damage from explosions; only blocks are protected to prevent griefing.
+* **Mob Explosion Control:** Optionally make mobs fully ignore selected explosion sources while players retain vanilla explosion behavior.
 * **Block Damage Control:** Disable block damage from TNT, Creepers, End Crystals, Wither Skulls, Fireballs, Withers, and custom "other" sources.
 * **Fire Prevention:** Stop explosions from causing wildfires.
 * **Auto-Generated Configuration:** A user-friendly config file is created on the first run at `config/blastproof.json` with _blastproofed_ default settings.
@@ -29,6 +29,11 @@ Blastproof ensures explosions from TNT, creepers, end crystals, and other source
 
     ```mc
     /blastproof disableBlockDamage tnt false
+    ```
+  * **Protect mobs from an explosion source:**
+
+    ```mc
+    /blastproof disableMobDamage bed true
     ```
 * **Universal Compatibility:** Works seamlessly on both dedicated servers and integrated single-player worlds.
 * **Lightweight:** Less than 20 KB with no additional dependencies (besides Fabric API).
@@ -45,7 +50,11 @@ This is my first Minecraft mod, Java project, and GitHub repository. As such, ce
 ## ⚙️ Configuration
 
 After your first launch, edit `config/blastproof.json` to adjust settings.
-Note: The `other` flag will override the `respawn_anchor` and `bed` flags!
+Each source is independent. The `other` key applies only to explosions whose source Blastproof cannot identify.
+
+> **Upgrading from 0.2.x:** Beds and respawn anchors previously fell back to `other`. If you relied on that behavior, set their explicit `bed` and `respawn_anchor` keys to the values you want after upgrading.
+
+When a `disableMobDamage` entry is enabled, matching `Mob` entities ignore the entire explosion hit: health damage, knockback, and explosion-hit callbacks are all suppressed. Players, armor stands, and other non-mob entities are unaffected by this setting.
 
 ```jsonc
 {
@@ -61,9 +70,26 @@ Note: The `other` flag will override the `respawn_anchor` and `bed` flags!
     "other": true
   },
   "disableFireCreation": {
+    "tnt": true,
+    "creeper": true,
+    "end_crystal": true,
+    "fireball": true,
+    "wither": true,
+    "wither_skull": true,
     "respawn_anchor": true,
     "bed": true,
     "other": true
+  },
+  "disableMobDamage": {
+    "tnt": false,
+    "creeper": false,
+    "end_crystal": false,
+    "fireball": false,
+    "wither": false,
+    "wither_skull": false,
+    "respawn_anchor": false,
+    "bed": false,
+    "other": false
   }
 }
 ```
