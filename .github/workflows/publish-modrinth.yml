@@ -36,6 +36,6 @@ jobs:
 
       - name: Publish Modrinth version
         run: |
-          scripts/publish-modrinth.sh \
+          bash scripts/publish-modrinth.sh \
             "$RELEASE_TAG" \
             "dist/blastproof-fabric-$RELEASE_TAG.jar"
