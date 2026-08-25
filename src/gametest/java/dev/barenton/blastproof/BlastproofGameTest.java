@@ -5,13 +5,14 @@ import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.PrimedTnt;
-import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
@@ -69,7 +70,7 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
         }) {
             var configuredKeys = BlastproofConfig.getKeysForSection(section);
             for (BlastproofExplosionType type : BlastproofExplosionType.values()) {
-                helper.assertTrue(
+                assertTrue(helper, 
                         configuredKeys.contains(type.configKey()),
                         "Missing " + section + " key: " + type.configKey()
                 );
@@ -83,7 +84,7 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
                 helper.getLevel().getServer().createCommandSourceStack(),
                 "blastproof disableMobDamage bed true"
         );
-        helper.assertTrue(
+        assertTrue(helper, 
                 BlastproofConfig.get(BlastproofConfig.SECTION_MOB_DAMAGE, "bed", false),
                 "The disableMobDamage command did not persist the bed setting"
         );
@@ -107,12 +108,12 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
                 center
         );
 
-        helper.assertTrue(zombie.getHealth() == zombieHealth, "Protected mob took bed explosion damage");
-        helper.assertTrue(
+        assertTrue(helper, zombie.getHealth() == zombieHealth, "Protected mob took bed explosion damage");
+        assertTrue(helper, 
                 zombie.getDeltaMovement().equals(zombieVelocity),
                 "Protected mob received bed explosion knockback"
         );
-        helper.assertTrue(
+        assertTrue(helper, 
                 player.getHealth() < playerHealth || player.getDeltaMovement().lengthSqr() > 0.0,
                 "Player should retain vanilla bed explosion effects"
         );
@@ -120,7 +121,7 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
 
     private static void verifyActualNetherBedImmunity(GameTestHelper helper) {
         ServerLevel nether = helper.getLevel().getServer().getLevel(Level.NETHER);
-        helper.assertTrue(nether != null, "The Nether level was not available for the bed test");
+        assertTrue(helper, nether != null, "The Nether level was not available for the bed test");
 
         BlockPos footPos = new BlockPos(0, 80, 0);
         BlockPos headPos = footPos.relative(Direction.EAST);
@@ -132,7 +133,7 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
         nether.setBlockAndUpdate(headPos, headState);
 
         Zombie zombie = EntityType.ZOMBIE.create(nether, EntitySpawnReason.COMMAND);
-        helper.assertTrue(zombie != null, "Failed to create the Nether bed test mob");
+        assertTrue(helper, zombie != null, "Failed to create the Nether bed test mob");
         zombie.setNoAi(true);
         zombie.setPos(Vec3.atCenterOf(headPos.relative(Direction.EAST)));
         nether.addFreshEntity(zombie);
@@ -148,8 +149,8 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
         );
         nether.getBlockState(headPos).useWithoutItem(nether, player, hit);
 
-        helper.assertTrue(zombie.getHealth() == health, "Protected mob took actual bed explosion damage");
-        helper.assertTrue(
+        assertTrue(helper, zombie.getHealth() == health, "Protected mob took actual bed explosion damage");
+        assertTrue(helper, 
                 zombie.getDeltaMovement().equals(velocity),
                 "Protected mob received actual bed explosion knockback"
         );
@@ -173,7 +174,7 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
                 center
         );
 
-        helper.assertTrue(
+        assertTrue(helper, 
                 zombie.getHealth() < health || zombie.getDeltaMovement().lengthSqr() > 0.0,
                 "The other setting incorrectly overrode the explicit bed setting"
         );
@@ -195,8 +196,8 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
 
         helper.useBlock(anchorPos, player);
 
-        helper.assertTrue(zombie.getHealth() == health, "Protected mob took respawn-anchor damage");
-        helper.assertTrue(
+        assertTrue(helper, zombie.getHealth() == health, "Protected mob took respawn-anchor damage");
+        assertTrue(helper, 
                 zombie.getDeltaMovement().equals(velocity),
                 "Protected mob received respawn-anchor knockback"
         );
@@ -213,7 +214,7 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
 
         explode(helper.getLevel(), tnt, null, center);
 
-        helper.assertTrue(
+        assertTrue(helper, 
                 zombie.getHealth() < health || zombie.getDeltaMovement().lengthSqr() > 0.0,
                 "The other setting incorrectly overrode the explicit TNT setting"
         );
@@ -237,6 +238,10 @@ public final class BlastproofGameTest implements CustomTestMethodInvoker {
                 false,
                 Level.ExplosionInteraction.BLOCK
         );
+    }
+
+    private static void assertTrue(GameTestHelper helper, boolean condition, String message) {
+        helper.assertTrue(condition, Component.literal(message));
     }
 
     @Override
