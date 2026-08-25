@@ -1,7 +1,7 @@
 /**
  * Registers and handles the `/blastproof` commands for configuring the Blastproof mod.
  * <p>
- * This class defines subcommands for toggling block damage and fire creation settings,
+ * This class defines subcommands for toggling block, fire, and mob settings,
  * providing both getter and setter functionality with tab-completion for valid keys.
  */
 package dev.barenton.blastproof;
@@ -35,6 +35,7 @@ public final class BlastproofCommands {
             // Register commands for each configurable section
             registerConfigCommand(dispatcher, BlastproofConfig.SECTION_BLOCK_DAMAGE, "disableBlockDamage");
             registerConfigCommand(dispatcher, BlastproofConfig.SECTION_FIRE_CREATION, "disableFireCreation");
+            registerConfigCommand(dispatcher, BlastproofConfig.SECTION_MOB_DAMAGE, "disableMobDamage");
         });
     }
 
