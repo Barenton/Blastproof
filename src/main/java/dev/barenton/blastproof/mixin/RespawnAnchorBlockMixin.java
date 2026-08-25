@@ -1,6 +1,7 @@
 package dev.barenton.blastproof.mixin;
 
-import dev.barenton.blastproof.BlastproofConfig;
+import dev.barenton.blastproof.BlastproofExplosionType;
+import dev.barenton.blastproof.TypedExplosionDamageCalculator;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.damagesource.DamageSource;
@@ -15,9 +16,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(RespawnAnchorBlock.class)
 public abstract class RespawnAnchorBlockMixin {
     /**
-     * In RespawnAnchorBlock#explode(BlockState, ServerLevel, BlockPos),
-     * redirect the single call to Level.explode(...) so that
-     * block-breaking is disabled by swapping ExplosionInteraction.BLOCK -> NONE.
+     * Marks the anchor explosion explicitly while preserving its custom
+     * water-aware damage calculator.
      */
     @Redirect(
             method = "explode(Lnet/minecraft/world/level/block/state/BlockState;"
@@ -43,24 +43,14 @@ public abstract class RespawnAnchorBlockMixin {
             boolean fire,
             ExplosionInteraction interaction
     ) {
-        boolean disableAnchor = BlastproofConfig.get(
-                BlastproofConfig.SECTION_BLOCK_DAMAGE,
-                BlastproofConfig.RESPAWN_ANCHOR_KEY,
-                false
-        );
-
-        ExplosionInteraction actualInteraction = disableAnchor
-                ? ExplosionInteraction.NONE
-                : interaction;
-
         world.explode(
                 source,
                 damageSource,
-                calculator,
+                TypedExplosionDamageCalculator.wrap(calculator, BlastproofExplosionType.RESPAWN_ANCHOR),
                 pos,
                 radius,
                 fire,
-                actualInteraction
+                interaction
         );
     }
 }
