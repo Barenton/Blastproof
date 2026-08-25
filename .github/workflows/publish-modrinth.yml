@@ -1,0 +1,41 @@
+name: Publish Modrinth
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub release tag to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: contains(inputs.tag || github.event.release.tag_name, '+mc')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+
+    steps:
+      - name: Check out release tooling
+        uses: actions/checkout@v4
+
+      - name: Download GitHub release artifact
+        run: |
+          mkdir -p dist
+          gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "blastproof-fabric-$RELEASE_TAG.jar" \
+            --dir dist
+
+      - name: Publish Modrinth version
+        run: |
+          scripts/publish-modrinth.sh \
+            "$RELEASE_TAG" \
+            "dist/blastproof-fabric-$RELEASE_TAG.jar"
